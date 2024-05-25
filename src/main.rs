@@ -38,6 +38,7 @@ enum Errors {
     ConfigAlreadyExists = 5,
     CouldNotExecuteWine = 6,
     CouldNotCreatePrefix = 7,
+    NoExeProvided = 8,
 }
 
 impl Errors {
@@ -51,6 +52,7 @@ impl Errors {
             Self::ConfigAlreadyExists => "Configuration file already exists",
             Self::CouldNotExecuteWine => "Failed to execute wine runner",
             Self::CouldNotCreatePrefix => "Could not create prefix directory",
+            Self::NoExeProvided => "No executable was provided, either in wpfx.toml (as 'name') or as an argument to run",
         }
     }
 }
@@ -72,6 +74,13 @@ fn main() {
         Commands::Init => init_config(CONFIG_PATH),
         Commands::Run { exe } => {
             let config = read_or_init_config(CONFIG_PATH);
+            let exe = exe.unwrap_or_else(|| {
+                config
+                    .executable
+                    .as_ref()
+                    .unwrap_or_else(|| exit_code(Errors::NoExeProvided))
+                    .to_string()
+            });
             let pfx = get_absolute_path(&config.prefix);
             let mut command = match config.gamescope.enabled {
                 false => Command::new(&config.runner),
@@ -185,7 +194,7 @@ fn get_resolution() -> String {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 struct App {
-    name: Option<String>,
+    executable: Option<String>,
     runner: String,
     prefix: String,
     gamescope: Gamescope,
@@ -194,7 +203,7 @@ struct App {
 impl Default for App {
     fn default() -> Self {
         App {
-            name: None,
+            executable: None,
             runner: String::from("wine"),
             prefix: String::from("pfx"),
             gamescope: Gamescope::default(),
@@ -243,7 +252,7 @@ enum Commands {
     /// Run application
     Run {
         // Executable to run
-        exe: String,
+        exe: Option<String>,
     },
     /// Install application by creating a .desktop file and placing it in the correct places
     Install,
