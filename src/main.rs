@@ -87,6 +87,10 @@ fn main() {
                 true => gamescope_command(&config),
             };
 
+            if config.dxvk {
+                command.env("WINEDLLOVERRIDES", "dxgi,d3d11,d3d10core,d3d9=n,b");
+            }
+
             let result = command
                 .env("WINEPREFIX", pfx)
                 .arg(exe)
@@ -183,7 +187,14 @@ fn get_resolution() -> String {
     let shell_command = "xrandr | grep ' connected' | grep -oP '\\d+x\\d+' | sort -nr | head -n 1";
 
     match Command::new("sh").arg("-c").arg(shell_command).output() {
-        Ok(out) => String::from_utf8(out.stdout).unwrap().trim().to_owned(),
+        Ok(out) => { 
+            if ! out.status.success() || out.stdout.is_empty() { // Special case
+                eprintln!("xrandr did not exit successfully: {}", String::from_utf8(out.stderr).unwrap().trim());
+                eprintln!("defaulting to 1920x1080");
+                return String::from("1920x1080")
+            };
+            String::from_utf8(out.stdout).unwrap().trim().to_owned()
+        }
         Err(e) => {
             eprintln!("could not execute xrandr: {}", e);
             eprintln!("defaulting to 1920x1080");
@@ -194,10 +205,15 @@ fn get_resolution() -> String {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 struct App {
+    // Path to executable
     executable: Option<String>,
     runner: String,
     prefix: String,
     gamescope: Gamescope,
+    // Whether to enable DXVK or not (requires manually adding the dll's, see
+    // https://github.com/doitsujin/dxvk for more info
+    // Will set the envoirenment variable WINEDLLOVERRIDES to "dxgi,d3d11,d3d10core,d3d9=n"
+    dxvk: bool,
 }
 
 impl Default for App {
@@ -207,6 +223,7 @@ impl Default for App {
             runner: String::from("wine"),
             prefix: String::from("pfx"),
             gamescope: Gamescope::default(),
+            dxvk: false
         }
     }
 }
@@ -225,6 +242,7 @@ struct Gamescope {
 impl Default for Gamescope {
     fn default() -> Self {
         let res = get_resolution();
+        println!("{}", res);
         let width = res.split_once('x').unwrap().0.to_owned();
         let height = res.split_once('x').unwrap().1.to_owned();
         Gamescope {
