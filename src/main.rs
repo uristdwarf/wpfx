@@ -126,7 +126,7 @@ fn gamescope_command(config: &App) -> Command {
 
 fn get_absolute_path(path: &String) -> String {
     if Path::new(path).is_absolute() {
-        return path.to_string();
+        path.to_string()
     } else {
         let mut dir = current_dir().expect("could not get current working directory");
         dir.push(path);
@@ -143,7 +143,7 @@ fn read_or_init_config(path: &str) -> App {
                 .unwrap_or_else(|err| exit_err(err, Errors::CreatingConfigFile));
             file.write_all(default.as_bytes())
                 .unwrap_or_else(|err| exit_err(err, Errors::WritingConfigFile));
-            return default;
+            default
         }
         _ => {
             exit_err(err, Errors::ReadingConfigFile);
@@ -216,8 +216,8 @@ struct Gamescope {
 impl Default for Gamescope {
     fn default() -> Self {
         let res = get_resolution();
-        let width = res.split_once("x").unwrap().0.to_owned();
-        let height = res.split_once("x").unwrap().1.to_owned();
+        let width = res.split_once('x').unwrap().0.to_owned();
+        let height = res.split_once('x').unwrap().1.to_owned();
         Gamescope {
             enabled: false,
             output_width: width.clone(),
