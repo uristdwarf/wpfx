@@ -187,11 +187,15 @@ fn get_resolution() -> String {
     let shell_command = "xrandr | grep ' connected' | grep -oP '\\d+x\\d+' | sort -nr | head -n 1";
 
     match Command::new("sh").arg("-c").arg(shell_command).output() {
-        Ok(out) => { 
-            if ! out.status.success() || out.stdout.is_empty() { // Special case
-                eprintln!("xrandr did not exit successfully: {}", String::from_utf8(out.stderr).unwrap().trim());
+        Ok(out) => {
+            if !out.status.success() || out.stdout.is_empty() {
+                // Special case
+                eprintln!(
+                    "xrandr did not exit successfully: {}",
+                    String::from_utf8(out.stderr).unwrap().trim()
+                );
                 eprintln!("defaulting to 1920x1080");
-                return String::from("1920x1080")
+                return String::from("1920x1080");
             };
             String::from_utf8(out.stdout).unwrap().trim().to_owned()
         }
@@ -223,7 +227,7 @@ impl Default for App {
             runner: String::from("wine"),
             prefix: String::from("pfx"),
             gamescope: Gamescope::default(),
-            dxvk: false
+            dxvk: false,
         }
     }
 }
