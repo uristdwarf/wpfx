@@ -18,14 +18,12 @@
 
 use clap::{Parser, Subcommand};
 use std::{
-    env::current_dir,
     io::{stderr, stdout},
     os::unix::process::ExitStatusExt,
-    path::Path,
-    process::{self, Command},
+    process::{self},
 };
-use wpfx::config::*;
 use wpfx::errors::*;
+use wpfx::{commands, config::*};
 
 const CONFIG_PATH: &str = "wpfx.toml";
 
@@ -43,18 +41,9 @@ fn main() {
                     .unwrap_or_else(|| exit_code(Errors::NoExeProvided))
                     .to_string()
             });
-            let pfx = get_absolute_path(&config.prefix);
-            let mut command = match config.gamescope.enabled {
-                false => Command::new(&config.runner),
-                true => gamescope_command(&config),
-            };
-
-            if config.dxvk {
-                command.env("WINEDLLOVERRIDES", "dxgi,d3d11,d3d10core,d3d9=n,b");
-            }
+            let mut command = commands::create_command(&config);
 
             let result = command
-                .env("WINEPREFIX", pfx)
                 .arg(exe)
                 .stdout(stdout())
                 .stderr(stderr())
@@ -72,41 +61,6 @@ fn main() {
             println!("Installing app...");
             // TODO: Implementation of the install command
         }
-    }
-}
-
-fn gamescope_command(config: &App) -> Command {
-    let mut gamescope = Command::new("gamescope");
-    gamescope
-        // TODO: Prefer explicitly set env variables
-        .env("WINEPREFIX", &config.prefix)
-        .arg("-W")
-        .arg(&config.gamescope.output_width)
-        .arg("-H")
-        .arg(&config.gamescope.output_height)
-        .arg("-w")
-        .arg(&config.gamescope.game_width)
-        .arg("-h")
-        .arg(&config.gamescope.game_height);
-
-    if config.gamescope.relative_mouse {
-        gamescope.arg("--force-grab-cursor");
-    }
-    if config.gamescope.fullscreen {
-        gamescope.arg("--fullscreen");
-    }
-    gamescope.arg("--").arg(&config.runner);
-
-    gamescope
-}
-
-fn get_absolute_path(path: &String) -> String {
-    if Path::new(path).is_absolute() {
-        path.to_string()
-    } else {
-        let mut dir = current_dir().expect("could not get current working directory");
-        dir.push(path);
-        return dir.to_str().unwrap().to_string();
     }
 }
 
