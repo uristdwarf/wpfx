@@ -181,9 +181,13 @@ fn init_config(path: &str) {
 
     println!("Successfully created a default wpfx.toml file.");
     println!("Please edit the file as needed.");
-    // TODO: Correctly handle existing directories
-    fs::create_dir(default_config.prefix)
-        .unwrap_or_else(|err| exit_err(err, Errors::CouldNotCreatePrefix));
+    match fs::create_dir(default_config.prefix) {
+        Ok(_) => (),
+        Err(err) if err.kind() == ErrorKind::AlreadyExists => {
+            println!("Prefix already exists, skipping creation...")
+        }
+        Err(err) => exit_err(err, Errors::CouldNotCreatePrefix),
+    }
     process::exit(0);
 }
 
@@ -222,6 +226,7 @@ struct App {
     // Whether to enable DXVK or not (requires manually adding the dll's, see
     // https://github.com/doitsujin/dxvk for more info
     // Will set the envoirenment variable WINEDLLOVERRIDES to "dxgi,d3d11,d3d10core,d3d9=n"
+    // TODO: Allow setting specific DLL overrides
     dxvk: bool,
 }
 
