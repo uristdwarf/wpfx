@@ -49,7 +49,7 @@ server, rather than simply delete them), which what prompted me to write this.
 
 ## Design Goals
 
-- [ ] Manage prefixes
+- [X] Manage prefixes
 - [ ] Manage game/application metadata
 - [ ] Aim for portability
 

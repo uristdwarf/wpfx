@@ -116,6 +116,7 @@ fn main() {
 fn gamescope_command(config: &App) -> Command {
     let mut gamescope = Command::new("gamescope");
     gamescope
+        // TODO: Prefer explicitly set env variables
         .env("WINEPREFIX", &config.prefix)
         .arg("-W")
         .arg(&config.gamescope.output_width)
@@ -147,10 +148,12 @@ fn get_absolute_path(path: &String) -> String {
     }
 }
 
+// TODO: Add global configuration
 fn read_or_init_config(path: &str) -> App {
     let toml_config = fs::read_to_string(path).unwrap_or_else(|err| match err.kind() {
         ErrorKind::NotFound => {
             eprintln!("wpfx.toml file not found, creating it");
+            // TODO: Add comments to configuration file
             let default = toml::to_string::<App>(&App::default()).unwrap();
             let mut file = File::create_new(CONFIG_PATH)
                 .unwrap_or_else(|err| exit_err(err, Errors::CreatingConfigFile));
@@ -178,11 +181,13 @@ fn init_config(path: &str) {
 
     println!("Successfully created a default wpfx.toml file.");
     println!("Please edit the file as needed.");
+    // TODO: Correctly handle existing directories
     fs::create_dir(default_config.prefix)
         .unwrap_or_else(|err| exit_err(err, Errors::CouldNotCreatePrefix));
     process::exit(0);
 }
 
+// TODO: Look for ways on wayland systems
 fn get_resolution() -> String {
     let shell_command = "xrandr | grep ' connected' | grep -oP '\\d+x\\d+' | sort -nr | head -n 1";
 
@@ -278,7 +283,7 @@ enum Commands {
     },
     /// Install application by creating a .desktop file and placing it in the correct places
     Install,
-    /// Init application by creating an empty .toml file to contain configuration.
+    /// Initialize application by creating an empty .toml file to contain configuration.
     /// This also creates an empty prefix if one doesn't exist.
     Init,
 }
