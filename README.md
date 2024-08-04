@@ -74,3 +74,16 @@ server, rather than simply delete them), which what prompted me to write this.
 - [ ] Add metadata generation
 - [ ] Figure out a way to manage multiple wine versions for games while still
   being portable (GNU stow?)
+
+### Installation objectives (metadata generation)
+
+Extract icons from executable(s):
+
+1. Extract icon from executable pointed by configuration file
+2. Check for .ico files.
+3. Extract icons from all executables in the working directory
+
+Prefer icons in that order. All other icons are to be put in
+`.wpfx/icons/alternatives`
+
+Create a .desktop file and put it in `~/.local/share/applications/`
