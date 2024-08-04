@@ -10,7 +10,8 @@ pub enum Errors {
     ConfigAlreadyExists = 5,
     CouldNotExecuteWine = 6,
     CouldNotCreatePrefix = 7,
-    NoExeProvided = 8,
+    CouldNotCreateDataDir = 8,
+    NoExeProvided = 9,
 }
 
 impl Errors {
@@ -24,6 +25,7 @@ impl Errors {
             Self::ConfigAlreadyExists => "Configuration file already exists",
             Self::CouldNotExecuteWine => "Failed to execute wine runner",
             Self::CouldNotCreatePrefix => "Could not create prefix directory",
+            Self::CouldNotCreateDataDir => "Could not create .wpfx directory",
             Self::NoExeProvided => "No executable was provided, either in wpfx.toml (as 'name') or as an argument to run",
         }
     }

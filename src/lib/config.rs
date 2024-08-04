@@ -12,6 +12,7 @@ pub struct App {
     pub executable: Option<String>,
     pub runner: String,
     pub prefix: String,
+    pub data_dir: String,
     pub gamescope: Gamescope,
     // Whether to enable DXVK or not (requires manually adding the dll's, see
     // https://github.com/doitsujin/dxvk for more info
@@ -26,6 +27,7 @@ impl Default for App {
             executable: None,
             runner: String::from("wine"),
             prefix: String::from("pfx"),
+            data_dir: String::from(".wpfx"),
             gamescope: Gamescope::default(),
             dxvk: false,
         }
@@ -89,14 +91,7 @@ impl Default for Gamescope {
 pub fn read_or_init_config(path: &str) -> App {
     let toml_config = fs::read_to_string(path).unwrap_or_else(|err| match err.kind() {
         ErrorKind::NotFound => {
-            eprintln!("wpfx.toml file not found, creating it");
-            // TODO: Add comments to configuration file
-            let default = toml::to_string::<App>(&App::default()).unwrap();
-            let mut file = File::create_new(path)
-                .unwrap_or_else(|err| exit_err(err, Errors::CreatingConfigFile));
-            file.write_all(default.as_bytes())
-                .unwrap_or_else(|err| exit_err(err, Errors::WritingConfigFile));
-            default
+            init_config(path)
         }
         _ => {
             exit_err(err, Errors::ReadingConfigFile);
@@ -107,23 +102,31 @@ pub fn read_or_init_config(path: &str) -> App {
         .unwrap()
 }
 
-pub fn init_config(path: &str) {
-    if Path::new(path).exists() {
-        exit_code(Errors::ConfigAlreadyExists);
-    }
+pub fn init_config(path: &str) -> String {
     let default_config = App::default();
-    let toml_config = toml::to_string(&default_config)
-        .unwrap_or_else(|err| exit_err(err, Errors::ParsingConfigFile));
-    fs::write(path, toml_config).unwrap_or_else(|err| exit_err(err, Errors::ReadingConfigFile));
-
-    println!("Successfully created a default wpfx.toml file.");
-    println!("Please edit the file as needed.");
-    match fs::create_dir(default_config.prefix) {
+    match fs::create_dir(&default_config.prefix) {
         Ok(_) => (),
         Err(err) if err.kind() == ErrorKind::AlreadyExists => {
             println!("Prefix already exists, skipping creation...")
         }
         Err(err) => exit_err(err, Errors::CouldNotCreatePrefix),
     }
-    process::exit(0);
+    match fs::create_dir(&default_config.data_dir) {
+        Ok(_) => (),
+        Err(err) if err.kind() == ErrorKind::AlreadyExists => {
+            println!("{0} already exists already exists, skipping creation...", default_config.data_dir)
+        }
+        Err(err) => exit_err(err, Errors::CouldNotCreatePrefix),
+    }
+
+    if Path::new(path).exists() {
+        exit_code(Errors::ConfigAlreadyExists);
+    }
+    let toml_config = toml::to_string(&default_config)
+        .unwrap_or_else(|err| exit_err(err, Errors::ParsingConfigFile));
+    fs::write(path, &toml_config).unwrap_or_else(|err| exit_err(err, Errors::ReadingConfigFile));
+
+    println!("Successfully created a default wpfx.toml file.");
+    println!("Please edit the file as needed.");
+    toml_config
 }
