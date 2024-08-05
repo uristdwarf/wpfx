@@ -1,4 +1,9 @@
-use std::{fs::{self, File}, io::{self, Write}, path::Path, process};
+use std::{
+    fs::{self, File},
+    io::{self, Write},
+    path::Path,
+    process,
+};
 
 use curl::easy::Easy;
 use flate2::read::GzDecoder;
@@ -18,9 +23,13 @@ pub fn install_dxvk(data_path: &Path, version: &String, prefix_path: &Path) {
         set_dxvk_installed(&file_path, version);
         return;
     }
-    let url = format!("https://github.com/doitsujin/dxvk/releases/download/v{version}/dxvk-{version}.tar.gz");
+    let url = format!(
+        "https://github.com/doitsujin/dxvk/releases/download/v{version}/dxvk-{version}.tar.gz"
+    );
     eprintln!("url: {0}", url);
-    let data = match get_data_from_url(format!("https://github.com/doitsujin/dxvk/releases/download/v{version}/dxvk-{version}.tar.gz")) {
+    let data = match get_data_from_url(format!(
+        "https://github.com/doitsujin/dxvk/releases/download/v{version}/dxvk-{version}.tar.gz"
+    )) {
         Ok(data) => data,
         Err(e) => {
             eprintln!("Failed to download data: {}", e);
@@ -51,10 +60,12 @@ fn get_data_from_url(url: String) -> Result<Vec<u8>, curl::Error> {
     easy.url(&url)?;
     easy.follow_location(true);
     let mut transfer = easy.transfer();
-    transfer.write_function(|data: &[u8]| {
-        dst.extend_from_slice(data);
-        Ok(data.len())
-    }).unwrap();
+    transfer
+        .write_function(|data: &[u8]| {
+            dst.extend_from_slice(data);
+            Ok(data.len())
+        })
+        .unwrap();
     transfer.perform()?;
     drop(transfer);
     Ok(dst)
@@ -70,7 +81,10 @@ fn copy_dxvk_files(dxvk_folder: &Path, prefix_path: &Path) {
 }
 
 fn set_dxvk_installed(data_path: &Path, version: &String) {
-    File::create(data_path.join(DXVK_EXISTS_FILE)).unwrap().write_all(version.as_bytes()).unwrap();
+    File::create(data_path.join(DXVK_EXISTS_FILE))
+        .unwrap()
+        .write_all(version.as_bytes())
+        .unwrap();
 }
 
 fn is_dxvk_installed(file_path: &Path, version: &String) -> bool {
@@ -96,4 +110,3 @@ fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> 
     }
     Ok(())
 }
-

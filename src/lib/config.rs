@@ -90,9 +90,7 @@ impl Default for Gamescope {
 // TODO: Add global configuration
 pub fn read_or_init_config(path: &str) -> App {
     let toml_config = fs::read_to_string(path).unwrap_or_else(|err| match err.kind() {
-        ErrorKind::NotFound => {
-            init_config(path)
-        }
+        ErrorKind::NotFound => init_config(path),
         _ => {
             exit_err(err, Errors::ReadingConfigFile);
         }
@@ -114,7 +112,10 @@ pub fn init_config(path: &str) -> String {
     match fs::create_dir(&default_config.data_dir) {
         Ok(_) => (),
         Err(err) if err.kind() == ErrorKind::AlreadyExists => {
-            println!("{0} already exists already exists, skipping creation...", default_config.data_dir)
+            println!(
+                "{0} already exists already exists, skipping creation...",
+                default_config.data_dir
+            )
         }
         Err(err) => exit_err(err, Errors::CouldNotCreatePrefix),
     }

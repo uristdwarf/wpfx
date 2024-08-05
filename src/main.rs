@@ -18,10 +18,13 @@
 
 use clap::{Parser, Subcommand};
 use std::{
-    io::{stderr, stdout}, os::unix::process::ExitStatusExt, path::Path, process::{self}
+    io::{stderr, stdout},
+    os::unix::process::ExitStatusExt,
+    path::Path,
+    process::{self},
 };
-use wpfx::{errors::*, external::install_dxvk};
 use wpfx::{commands, config::*};
+use wpfx::{errors::*, external::install_dxvk};
 
 const CONFIG_PATH: &str = "wpfx.toml";
 
@@ -36,7 +39,11 @@ fn main() {
         Commands::Run { exe } => {
             let config = read_or_init_config(CONFIG_PATH);
             if config.dxvk {
-                install_dxvk(Path::new(&config.data_dir), &"2.4".to_string(), Path::new(&config.prefix));
+                install_dxvk(
+                    Path::new(&config.data_dir),
+                    &"2.4".to_string(),
+                    Path::new(&config.prefix),
+                );
             }
             let exe = exe.unwrap_or_else(|| {
                 config
